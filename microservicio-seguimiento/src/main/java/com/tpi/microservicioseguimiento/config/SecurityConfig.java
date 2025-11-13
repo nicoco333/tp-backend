@@ -26,12 +26,19 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                // Por defecto, TODAS las peticiones deben estar autenticadas
+                // [1] PERMITIR ACCESO: Swagger UI y la documentación OpenAPI
+                // Usamos la sintaxis de string directamente en authorize.requestMatchers()
+                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                
+                // [2] PERMITIR ACCESO: Endpoint de prueba de la API Externa (GeoController)
+                .requestMatchers("/api/distancia/**").permitAll() 
+                
+                // [3] PROTEGER TODO LO DEMÁS: Todas las otras rutas (rutas de negocio) requieren Token JWT
                 .anyRequest().authenticated() 
             )
+            .csrf(csrf -> csrf.disable())
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
-                    // Usamos nuestro "conversor" personalizado para leer los roles
                     .jwtAuthenticationConverter(jwtAuthenticationConverter()) 
                 )
             );
